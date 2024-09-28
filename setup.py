@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="qda_package",
-    version="1.0.2",
+    version="1.0.3",
     packages=find_packages(),
     include_package_data=True,  # Include all data files (important for including pytransform)
     package_data={
