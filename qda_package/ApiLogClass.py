@@ -6,8 +6,9 @@ from .MyConfig import get_log_api_host
 
 
 class ApiLogClass:
-    __property_logger = None
+    __machine_logger = None
     __workflowname = None
+    __mode = None
     __propertyid = None
     __workflowmachinename = None
     __machinetemplate = None
@@ -17,7 +18,8 @@ class ApiLogClass:
     __log_api_host = get_log_api_host()
 
     def __init__(self,
-                 property_logger,
+                 machine_logger,
+                 mode,
                  workflowname,
                  propertyid,
                  workflowmachinename,
@@ -25,8 +27,9 @@ class ApiLogClass:
                  machineversion,
                  log_file_name
                  ):
-        self.__property_logger = property_logger
+        self.__machine_logger = machine_logger
         self.__workflowname = workflowname
+        self.__mode = mode
         self.__propertyid = propertyid
         self.__workflowmachinename = workflowmachinename
         self.__machinetemplate = machinetemplate
@@ -43,13 +46,14 @@ class ApiLogClass:
                 "workflowname": self.__workflowname,
                 "logdata": logdata,
                 "status": status,
-                "propertyid": self.__propertyid
+                "propertyid": self.__propertyid,
+                "mode": self.__mode
             }
 
             # Make the POST request
             response = requests.post(url, data=form_data)
         except Exception as e:
-            self.__property_logger.info(f"API LOG:: Workflow Level > {logdata} > {str(e)}")
+            self.__machine_logger.info(f"API LOG:: Workflow Level > {logdata} > {str(e)}")
         finally:
             pass
 
@@ -66,13 +70,14 @@ class ApiLogClass:
                 "status": status,
                 "propertyid": self.__propertyid,
                 "workflowmachinename": self.__workflowmachinename,
-                "log_file_name": self.__log_file_name
+                "log_file_name": self.__log_file_name,
+                "mode": self.__mode
             }
 
             # Make the POST request
             response = requests.post(url, data=form_data)
         except Exception as e:
-            self.__property_logger.info(f"API LOG:: Machine Level Error > {logdata} > {str(e)}")
+            self.__machine_logger.info(f"API LOG:: Machine Level Error > {logdata} > {str(e)}")
         finally:
             pass
 
@@ -107,12 +112,13 @@ class ApiLogClass:
                 "networkbytessentmb": networkbytessentmb,
                 "networkbytesreceivedmb": networkbytesreceivedmb,
                 "workflowmachinename": self.__workflowmachinename,
+                "mode": self.__mode
             }
 
             # Make the POST request
             response = requests.post(url, data=form_data)
         except Exception as e:
-            self.__property_logger.info(
+            self.__machine_logger.info(
                 f"API LOG:: Machine Level Usage Error > {self.__workflowmachinename} > {str(e)}")
         finally:
             pass

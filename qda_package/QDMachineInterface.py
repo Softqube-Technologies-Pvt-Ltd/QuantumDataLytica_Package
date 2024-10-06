@@ -37,6 +37,7 @@ class QDMachineInterface(ABC):
     __file_folder = ""
     __output_file = ""
     __dependent_machine = ""
+    __mode = ""  # live, test, dev
 
     # Oprational variables
     __input_data = dict()
@@ -52,9 +53,11 @@ class QDMachineInterface(ABC):
     def __init__(self):
         try:
             # Read the JSON string from command line argument
-            if not self.__read_sys_argument():
-                err_msg = "Getting error to read argument, please check your argument!!!"
-                print(err_msg)
+            __error_list = self.__read_sys_argument()
+            if __error_list and len(__error_list) > 0:
+                for e in __error_list:
+                    print(e)
+                return
 
             # Create logger object for entire machine log
             self.__log_folder = self.__workflow_name
@@ -77,7 +80,8 @@ class QDMachineInterface(ABC):
             self.__update_dependent_data()
 
             # Create API LOG Object
-            self.__mApiLog = ApiLogClass(property_logger=self.machine_logger,
+            self.__mApiLog = ApiLogClass(machine_logger=self.machine_logger,
+                                         mode=self.__mode,
                                          workflowname=self.__workflow_name,
                                          propertyid=self.__propertyid,
                                          workflowmachinename=self.__machine_name,
@@ -86,19 +90,20 @@ class QDMachineInterface(ABC):
                                          log_file_name=self.__log_file_name)
 
             # Start workflow
-            if self.__machine_name.upper() == "STARTER":
-                self.__mApiLog.workflowlogsave(logdata=f'{self.__workflow_name} started.', status='start')
+            if self.__mApiLog:
+                if self.__machine_name.upper() == "STARTER":
+                    self.__mApiLog.workflowlogsave(logdata=f'{self.__workflow_name} started.', status='start')
 
-            # Machine initialized
-            self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call initialized.',
-                                                  status='start')
+                # Machine initialized
+                self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call initialized.',
+                                                      status='start')
 
-            # Start system details log
-            self.__mApiLog.start_system_log()
+                # Start system details log
+                self.__mApiLog.start_system_log()
 
         except Exception as e:
             err_msg = f"Exception :: {str(e)}"
-            self.machine_logger.info(err_msg)
+            print(err_msg)
             self.__error_list.append(err_msg)
         finally:
             pass
@@ -160,8 +165,9 @@ class QDMachineInterface(ABC):
             # Step 1: Receiving, Error Blank, Inform to API
             self.machine_logger.info(f'{self.__machinetemplate_name} call receiving.')
             self.__error_list = []
-            self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call receiving.',
-                                                  status='start')
+            if self.__mApiLog:
+                self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call receiving.',
+                                                      status='start')
             self.receiving(self.__input_data, self.__dependent_machine_data, self.__callback)
             if self.__check_errors(step_name="receiving"):
                 self.__write_output_file()
@@ -170,8 +176,9 @@ class QDMachineInterface(ABC):
             # Step 2: Pre-processing
             self.machine_logger.info(f'{self.__machinetemplate_name} call pre_processing.')
             self.__error_list = []
-            self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call pre_processing.',
-                                                  status='start')
+            if self.__mApiLog:
+                self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call pre_processing.',
+                                                      status='start')
             self.pre_processing(self.__callback)
             if self.__check_errors(step_name="pre_processing"):
                 self.__write_output_file()
@@ -180,8 +187,9 @@ class QDMachineInterface(ABC):
             # Step 3: Processing
             self.machine_logger.info(f'{self.__machinetemplate_name} call processing.')
             self.__error_list = []
-            self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call processing.',
-                                                  status='start')
+            if self.__mApiLog:
+                self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call processing.',
+                                                      status='start')
             self.processing(self.__callback)
             if self.__check_errors(step_name="processing"):
                 self.__write_output_file()
@@ -190,8 +198,9 @@ class QDMachineInterface(ABC):
             # Step 4: Post-processing
             self.machine_logger.info(f'{self.__machinetemplate_name} call post_processing.')
             self.__error_list = []
-            self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call post_processing.',
-                                                  status='start')
+            if self.__mApiLog:
+                self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call post_processing.',
+                                                      status='start')
             self.post_processing(self.__callback)
             if self.__check_errors(step_name="post_processing"):
                 self.__write_output_file()
@@ -200,8 +209,9 @@ class QDMachineInterface(ABC):
             # Step 5: Packaging and Shipping
             self.machine_logger.info(f'{self.__machinetemplate_name} call packaging_shipping.')
             self.__error_list = []
-            self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call packaging_shipping.',
-                                                  status='start')
+            if self.__mApiLog:
+                self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} call packaging_shipping.',
+                                                      status='start')
             self.packaging_shipping(self.__callback)
             if self.__check_errors(step_name="packaging_shipping"):
                 self.__write_output_file()
@@ -230,15 +240,18 @@ class QDMachineInterface(ABC):
         except Exception as e:
             print(f"Workflow stopped due to an error: {str(e)}")
         finally:
-            # Start workflow
+            print("Machine execution finished !!!")
             if self.__machine_name.upper() == "EXIT":
-                self.__mApiLog.workflowlogsave(logdata=f'{self.__workflow_name} end.', status='end')
+                if self.__mApiLog:
+                    self.__mApiLog.workflowlogsave(logdata=f'{self.__workflow_name} end.', status='end')
 
             # Step 6 : Handle System outpput
             if self.__output_data and self.__output_data['result'] == 'success':
                 # Machine success
-                self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} successfully finished.',
-                                                      status='end')
+                if self.__mApiLog:
+                    self.__mApiLog.workflowmachinelogsave(
+                        logdata=f'{self.__machinetemplate_name} successfully finished.',
+                        status='end')
                 sys.exit(0)  # Zero exit code indicates success
             else:
                 # Machine failed
@@ -246,8 +259,9 @@ class QDMachineInterface(ABC):
                 e_list.insert(0, self.__output_data['message'])
                 error_string = "\n".join(e_list)
                 print(error_string)
-                self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} {error_string}',
-                                                      status='failed')
+                if self.__mApiLog:
+                    self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} {error_string}',
+                                                          status='failed')
                 sys.exit(1)  # Non-zero exit code indicates failure
 
     def __check_errors(self, step_name):
@@ -263,6 +277,14 @@ class QDMachineInterface(ABC):
             self.__output_data["message"] = message
             self.__output_data["error_list"] = self.get_error_list()
             self.__output_data["data"] = self.get_final_data()
+
+            e_list = self.__error_list
+            e_list.insert(0, self.__output_data['message'])
+            error_string = "\n".join(e_list)
+            print(error_string)
+            if self.__mApiLog:
+                self.__mApiLog.workflowmachinelogsave(logdata=f'{step_name} {error_string}',
+                                                      status='failed')
             return True
         return False
 
@@ -270,25 +292,97 @@ class QDMachineInterface(ABC):
         """Read and parse JSON string from command line arguments.
             :return: True if not found error
             """
+        error_list = []
         try:
             if len(sys.argv) < 2:
-                print("command line arguments is empty, please try again!!!")
+                print("ERROR =>>>>> command line arguments is empty, please try again!!!")
                 return False
 
             json_str = sys.argv[1]
             self.__master_args = json.loads(json_str)
+
+            if not isinstance(self.__master_args, dict):
+                print("ERROR =>>>>> command line arguments' must be a dictionary (JSON object).")
+                return False
+
+            if not self.__master_args:  # This checks if the dictionary is empty
+                print("ERROR =>>>>> command line arguments is empty, please try again!!!")
+                return False
+
             self.__output_data["master_args"] = self.__master_args
 
-            self.__workflow_name = self.__master_args['workflow_name']
-            self.__machine_name = self.__master_args['machine_name']
-            self.__machinetemplate_name = self.__master_args['machinetemplate_name']
-            self.__machine_version = self.__master_args['machine_version']
-            self.__machine_ID = self.__master_args['machine_ID']
+            if 'mode' in self.__master_args:
+                self.__mode = self.__master_args['mode']
+            else:
+                self.__mode = "dev"
 
-            self.__prog_lang = self.__master_args['prog_lang']
-            self.__input_data = self.__master_args['input_data']
-            self.__output_file = self.__master_args['output']
-            self.__dependent_machine = self.__master_args['depends_machine']
+            if 'workflow_name' in self.__master_args:
+                self.__workflow_name = self.__master_args['workflow_name']
+            else:
+                self.__workflow_name = "TestWorkFlow"
+
+            if 'machinetemplate_name' in self.__master_args:
+                self.__machinetemplate_name = self.__master_args['machinetemplate_name']
+            else:
+                self.__machinetemplate_name = "TestTemplate"
+
+            if 'machine_ID' in self.__master_args:
+                self.__machine_ID = self.__master_args['machine_ID']
+            else:
+                self.__machine_ID = 0
+
+            if 'machine_version' in self.__master_args:
+                self.__machine_version = self.__master_args['machine_version']
+            else:
+                self.__machine_version = '1.0.0'
+
+            if 'prog_lang' in self.__master_args:
+                self.__prog_lang = self.__master_args['prog_lang']
+            else:
+                self.__prog_lang = 'python'
+
+            if 'machine_name' in self.__master_args:
+                self.__machine_name = self.__master_args['machine_name']
+            else:
+                msg = f"Key 'machine_name' is not available in input data."
+                error_list.append(msg)
+
+            if self.__machine_name is None or self.__machine_name == "":
+                msg = f"'machine_name' is None or Blank"
+                error_list.append(msg)
+
+            if 'input_data' in self.__master_args:
+                self.__input_data = self.__master_args['input_data']
+            else:
+                msg = f"Key 'input_data' is not available in input data."
+                error_list.append(msg)
+
+            if not isinstance(self.__input_data, dict):
+                msg = f"'input_data' must be a dictionary (JSON object)."
+                error_list.append(msg)
+
+            if 'output' in self.__master_args:
+                self.__output_file = self.__master_args['output']
+            else:
+                msg = f"Key 'output' is not available in input data."
+                error_list.append(msg)
+
+            if not isinstance(self.__output_file, str):
+                msg = f"'output' must be a string."
+                error_list.append(msg)
+
+            if not self.__output_file.endswith('.json'):
+                msg = f"'output' must end with '.json' extension."
+                error_list.append(msg)
+
+            if 'depends_machine' in self.__master_args:
+                self.__dependent_machine = self.__master_args['depends_machine']
+            else:
+                error_list.append("Key 'depends_machine' is not available in input data.")
+
+            if not isinstance(self.__dependent_machine, list):
+                msg = f"'depends_machine' must be a list."
+                error_list.append(msg)
 
             # Get property code and id from input data
             if self.__input_data:
@@ -296,14 +390,14 @@ class QDMachineInterface(ABC):
                 self.__property_code = self.__input_data['property_code']
 
             print(f"input data : {self.__input_data}")
-
-            return True
         except json.JSONDecodeError:
-            print("Invalid JSON string provided.")
-            return False
+            print("ERROR =>>>>> Invalid JSON string provided.")
         except Exception as e:
-            print(f"Exception :: {str(e)}")
-            return False
+            msg = f"Exception :: {str(e)}"
+            print(msg)
+            error_list.append(msg)
+        finally:
+            return error_list
 
     def __update_dependent_data(self):
         print(f"dependent_machine list : {self.__dependent_machine}")
@@ -317,7 +411,7 @@ class QDMachineInterface(ABC):
                         if output_json and output_json['result'] == 'success':
                             if output_json['data']:
                                 self.__dependent_machine_data = {**self.__dependent_machine_data,
-                                                                    **output_json['data']}
+                                                                 **output_json['data']}
                 else:
                     self.machine_logger.info(f"File '{file_path}' does not exist.")
 
