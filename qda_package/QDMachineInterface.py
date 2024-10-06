@@ -389,13 +389,9 @@ class QDMachineInterface(ABC):
 
                 if 'property_id' in self.__input_data:
                     self.__propertyid = self.__master_args['property_id']
-                else:
-                    error_list.append("Key '__propertyid' is not available in input data.")
 
                 if 'property_code' in self.__input_data:
                     self.__property_code = self.__input_data['property_code']
-                else:
-                    error_list.append("Key 'property_code' is not available in input data.")
 
             print(f"input data : {self.__input_data}")
         except json.JSONDecodeError:
