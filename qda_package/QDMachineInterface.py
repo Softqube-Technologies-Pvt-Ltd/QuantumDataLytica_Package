@@ -31,8 +31,8 @@ class QDMachineInterface(ABC):
     __machinetemplate_name = ""
     __machine_version = ""
     __machine_ID = ""
-    __propertyid = ""
-    __property_code = ""
+    __propertyid = 0
+    __property_code = ''
     __prog_lang = ""
     __file_folder = ""
     __output_file = ""
@@ -384,14 +384,14 @@ class QDMachineInterface(ABC):
                 msg = f"'depends_machine' must be a list."
                 error_list.append(msg)
 
-            # Get property code and id from input data
-            if self.__input_data:
-
-                if 'property_id' in self.__input_data:
-                    self.__propertyid = self.__master_args['property_id']
-
-                if 'property_code' in self.__input_data:
-                    self.__property_code = self.__input_data['property_code']
+            # # Get property code and id from input data
+            # if self.__input_data:
+            #
+            #     if 'property_id' in self.__input_data:
+            #         self.__propertyid = self.__master_args['property_id']
+            #
+            #     if 'property_code' in self.__input_data:
+            #         self.__property_code = self.__input_data['property_code']
 
             print(f"input data : {self.__input_data}")
         except json.JSONDecodeError:
