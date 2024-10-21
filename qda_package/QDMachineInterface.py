@@ -229,21 +229,23 @@ class QDMachineInterface(ABC):
             # Step 3 : Write the final output to a file
             self.__write_output_file()
 
+        except Exception as e:
+            print(f"Workflow stopped due to an error: {str(e)}")
+        finally:
+
             # Step 4 : Stop Property Level logging file
-            stop_logging(self.machine_logger)
+            if self.machine_logger:
+                stop_logging(self.machine_logger)
+
+            print("Machine execution finished !!!")
+            if self.__machine_name.upper() == "EXIT":
+                if self.__mApiLog:
+                    self.__mApiLog.workflowlogsave(logdata=f'{self.__workflow_name} end.', status='end')
 
             # Step 5 : Upload logger file into S3
             if self.__workflow_name and self.__log_file_path and self.__log_file_name:
                 upload_file_to_s3(local_file_path=self.__log_file_path, file_name=self.__log_file_name,
                                   workflow=self.__workflow_name)
-
-        except Exception as e:
-            print(f"Workflow stopped due to an error: {str(e)}")
-        finally:
-            print("Machine execution finished !!!")
-            if self.__machine_name.upper() == "EXIT":
-                if self.__mApiLog:
-                    self.__mApiLog.workflowlogsave(logdata=f'{self.__workflow_name} end.', status='end')
 
             # Step 6 : Handle System outpput
             if self.__output_data and self.__output_data['result'] == 'success':
