@@ -300,7 +300,17 @@ class QDMachineInterface(ABC):
                 print("ERROR =>>>>> command line arguments is empty, please try again!!!")
                 return False
 
-            json_str = sys.argv[1]
+            json_str = ""
+
+            # json_str = sys.argv[1]
+
+            # First, check if a command-line argument exists (sys.argv[1]), if not fallback to the environment variable
+            try:
+                json_str = sys.argv[1]  # Get the first command-line argument
+            except IndexError:
+                json_str = os.getenv('ENV_SCRIPT_ARGS')  # Fallback to the environment variable if no argument
+
+
             self.__master_args = json.loads(json_str)
 
             if not isinstance(self.__master_args, dict):
