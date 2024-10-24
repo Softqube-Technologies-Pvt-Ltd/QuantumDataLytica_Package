@@ -3,6 +3,7 @@ import os
 from abc import ABC, abstractmethod
 import sys
 from datetime import datetime
+import subprocess
 
 from .MachineLogAnalytics import start_logging, stop_logging, upload_file_to_s3
 from .ApiLogClass import ApiLogClass
@@ -246,6 +247,19 @@ class QDMachineInterface(ABC):
             if self.__workflow_name and self.__log_file_path and self.__log_file_name:
                 upload_file_to_s3(local_file_path=self.__log_file_path, file_name=self.__log_file_name,
                                   workflow=self.__workflow_name)
+                
+            
+            # check supervisord running for selenium script then stop it for finish machine 
+            try:
+                if self.is_supervisord_running():
+                    print("supervisor detected and shutdown it!!!")
+                    start_script_path = 'stopsupervisore.sh'  # Update this path
+                    subprocess.run(['bash', start_script_path], check=True)
+                else:
+                    print("supervisor not detected!!!")
+            except Exception as e:
+                print("Get error at supervisor stop",str(e))
+            
 
             # Step 6 : Handle System outpput
             if self.__output_data and self.__output_data['result'] == 'success':
@@ -265,6 +279,21 @@ class QDMachineInterface(ABC):
                     self.__mApiLog.workflowmachinelogsave(logdata=f'{self.__machinetemplate_name} {error_string}',
                                                           status='failed')
                 sys.exit(1)  # Non-zero exit code indicates failure
+
+    def is_supervisord_running(self):
+        try:
+            # Use `pgrep` to check if the supervisord process is running
+            result = subprocess.run(['pgrep', 'supervisord'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            
+            if result.returncode == 0:
+                print("supervisord is running.")
+                return True
+            else:
+                print("supervisord is not running.")
+                return False
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return False
 
     def __check_errors(self, step_name):
         """Helper function to check for errors and stop workflow if errors are found.
