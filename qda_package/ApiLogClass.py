@@ -9,13 +9,13 @@ class ApiLogClass:
     __machine_logger = None
     __workflowname = None
     __mode = None
-    __propertyid = None
+    __propertyid = ""
     __workflowmachinename = None
     __machinetemplate = None
     __machineversion = None
     __log_file_name = None
 
-    __log_api_host = get_log_api_host()
+    __log_api_host = ""
 
     def __init__(self,
                  machine_logger,
@@ -35,6 +35,13 @@ class ApiLogClass:
         self.__machinetemplate = machinetemplate
         self.__machineversion = machineversion
         self.__log_file_name = log_file_name
+
+        if self.__mode == 'live':
+            self.__log_api_host = get_log_api_host()
+        elif self.__mode == 'dev':
+            self.__log_api_host = get_log_api_host()
+        elif self.__mode == 'test':
+            self.__log_api_host = get_log_api_host()
 
     def workflowlogsave(self, logdata, status):
         try:

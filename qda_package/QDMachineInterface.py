@@ -26,18 +26,18 @@ class QDMachineInterface(ABC):
     __master_args = None
 
     # File read/write variables
-    __workflow_name = ""
+    __workflow_name = "TestWorkFlow" #default value
     __machine_name = ""
     __machinetemplate_name = ""
-    __machine_version = ""
-    __machine_ID = ""
+    __machine_version = '1.0.0'
+    __machine_ID = 0
     __propertyid = 0
     __property_code = ''
-    __prog_lang = ""
+    __prog_lang = 'python'
     __file_folder = ""
     __output_file = ""
     __dependent_machine = ""
-    __mode = ""  # live, test, dev
+    __mode = "dev"  # live, test, dev #default value 'dev'
 
     # Oprational variables
     __input_data = dict()
@@ -295,22 +295,19 @@ class QDMachineInterface(ABC):
             :return: True if not found error
             """
         error_list = []
+        json_str = ""
         try:
-            if len(sys.argv) < 2:
-                print("ERROR =>>>>> command line arguments is empty, please try again!!!")
+            if len(sys.argv) > 1:
+                json_str = sys.argv[1]  # Get the first command-line argument if available
+            else:
+                json_str = os.getenv('ENV_SCRIPT_ARGS')  # Fallback to the environment variable
+                json_str = json.loads(json_str)
+
+            if not json_str:
+                print(
+                    "ERROR =>>>>> Command line arguments or environment variable 'ENV_SCRIPT_ARGS' is empty, please try again!!!")
                 return False
-
-            json_str = ""
-
-            # json_str = sys.argv[1]
-
-            # First, check if a command-line argument exists (sys.argv[1]), if not fallback to the environment variable
-            try:
-                json_str = sys.argv[1]  # Get the first command-line argument
-            except IndexError:
-                json_str = os.getenv('ENV_SCRIPT_ARGS')  # Fallback to the environment variable if no argument
-
-
+           
             self.__master_args = json.loads(json_str)
 
             if not isinstance(self.__master_args, dict):
