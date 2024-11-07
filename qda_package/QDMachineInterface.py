@@ -330,7 +330,7 @@ class QDMachineInterface(ABC):
                 json_str = sys.argv[1]  # Get the first command-line argument if available
             else:
                 json_str = os.getenv('ENV_SCRIPT_ARGS')  # Fallback to the environment variable
-                json_str = json.loads(json_str)
+                # json_str = json.loads(json_str)
 
             if not json_str:
                 print(

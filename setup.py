@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="qda_package",
-    version="1.2.0",
+    version="1.2.1",
     packages=find_packages(),
     install_requires=[  # List of dependencies
         "requests==2.31.0",
